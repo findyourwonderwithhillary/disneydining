@@ -142,11 +142,16 @@ img{max-width:100%;display:block}
 .chip:hover{border-color:var(--ink-3);color:var(--ink)}
 .chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:var(--paper);font-weight:500}
 .chip.goldchip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold)}
-.filter-drawer{border-top:1px solid var(--rule-2);padding:12px 14px;display:none;gap:14px;flex-direction:column}
-.filter-drawer.open{display:flex}
-.fgroup{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
-.fgroup > .eyebrow{flex:0 0 100%;margin-bottom:1px}
+.filter-drawer{border-top:1px solid var(--rule-2);padding:12px 14px;display:none;gap:10px;flex-direction:column}
+.filter-drawer.open{display:flex;max-height:min(42vh,360px);overflow-y:auto;overscroll-behavior:contain}
+.fgroup{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.fgroup > .eyebrow{flex:0 0 132px;margin:0;line-height:1.3}
+@media(max-width:760px){.fgroup > .eyebrow{flex:0 0 100%;margin-bottom:1px}}
+.controls.expanded{position:static}
 .resultline{padding:9px 15px;border-top:1px solid var(--rule-2);font-size:12.5px;color:var(--ink-3);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.showres{margin-left:auto;background:var(--blue);color:var(--paper);border-radius:99px;padding:6px 15px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.showres:hover{opacity:.9}
+.showres[hidden]{display:none}
 
 /* ---------- results ---------- */
 main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 90px}
@@ -319,7 +324,10 @@ footer{border-top:1px solid var(--rule);background:var(--paper);margin-top:40px}
       <div class="fgroup" id="bookGroup"><span class="eyebrow">Booking reality</span></div>
       <div class="fgroup" id="magicGroup"><span class="eyebrow">The magic factor</span></div>
     </div>
-    <div class="resultline"><span id="resultCount">—</span><span id="activeFilters"></span></div>
+    <div class="resultline">
+      <span id="resultCount">—</span><span id="activeFilters"></span>
+      <button class="showres" id="showRes" hidden>Show results <span aria-hidden="true">&darr;</span></button>
+    </div>
   </div>
 </div>
 
@@ -510,7 +518,19 @@ $("#quickChar").onclick=()=>{
 $("#trackBook").onclick=()=>setTrack("book");
 $("#trackTaste").onclick=()=>setTrack("taste");
 $("#q").oninput=e=>{S.q=e.target.value.toLowerCase().trim();render()};
-$("#moreBtn").onclick=e=>{const o=$("#drawer").classList.toggle("open");e.currentTarget.setAttribute("aria-pressed",String(o))};
+function setDrawer(o){
+  $("#drawer").classList.toggle("open",o);
+  document.querySelector(".controls").classList.toggle("expanded",o);
+  $("#moreBtn").setAttribute("aria-pressed",String(o));
+  $("#showRes").hidden=!o;
+}
+$("#moreBtn").onclick=()=>setDrawer(!$("#drawer").classList.contains("open"));
+$("#showRes").onclick=()=>{
+  setDrawer(false);
+  const c=document.querySelector(".controls-card");
+  const y=window.scrollY+c.getBoundingClientRect().bottom-64;
+  window.scrollTo({top:y,behavior:"smooth"});
+};
 $("#onlyWish").onclick=e=>{S.onlyWish=!S.onlyWish;e.currentTarget.setAttribute("aria-pressed",String(S.onlyWish));render()};
 (function(){
   const on=store.get("fyw.notes",false);
@@ -528,7 +548,7 @@ $("#clearAll").onclick=()=>{
   document.querySelectorAll(".chip[aria-pressed]").forEach(c=>c.setAttribute("aria-pressed","false"));
   document.body.classList.toggle("shownotes",store.get("fyw.notes",false));
   $("#notesBtn").setAttribute("aria-pressed",String(store.get("fyw.notes",false)));
-  $("#moreBtn").setAttribute("aria-pressed",String($("#drawer").classList.contains("open")));
+  setDrawer($("#drawer").classList.contains("open"));
   render();
 };
 
